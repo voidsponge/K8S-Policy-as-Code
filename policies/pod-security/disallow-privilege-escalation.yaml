@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privilege-escalation
+  annotations:
+    policies.kyverno.io/title: Interdire l'élévation de privilèges
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      allowPrivilegeEscalation permet à un processus d'obtenir plus de
+      privilèges que son parent (binaires setuid, par exemple). Il doit être
+      explicitement désactivé sur chaque conteneur.
+spec:
+  background: true
+  rules:
+    - name: privilege-escalation-false
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          securityContext.allowPrivilegeEscalation doit être défini à false
+          sur chaque conteneur.
+        pattern:
+          spec:
+            =(initContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+            =(ephemeralContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"

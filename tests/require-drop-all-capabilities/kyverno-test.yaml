@@ -1,0 +1,49 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: require-drop-all-capabilities
+policies:
+- ../../policies/pod-security/require-drop-all-capabilities.yaml
+resources:
+- resources.yaml
+results:
+- policy: require-drop-all-capabilities
+  rule: drop-all
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/net-bind-service
+  - demo/add-sys-admin
+  result: pass
+- policy: require-drop-all-capabilities
+  rule: drop-all
+  kind: Pod
+  resources:
+  - demo/no-drop
+  result: fail
+- policy: require-drop-all-capabilities
+  rule: drop-all
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip
+- policy: require-drop-all-capabilities
+  rule: adding-capabilities
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/net-bind-service
+  - demo/no-drop
+  result: pass
+- policy: require-drop-all-capabilities
+  rule: adding-capabilities
+  kind: Pod
+  resources:
+  - demo/add-sys-admin
+  result: fail
+- policy: require-drop-all-capabilities
+  rule: adding-capabilities
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

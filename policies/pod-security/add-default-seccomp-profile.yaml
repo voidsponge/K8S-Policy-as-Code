@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-default-seccomp-profile
+  annotations:
+    policies.kyverno.io/title: Ajouter le profil seccomp RuntimeDefault
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Policy de mutation : si un Pod ne définit pas de profil seccomp, Kyverno
+      ajoute RuntimeDefault au niveau du Pod. Le développeur n'a rien à faire
+      et le Pod est durci par défaut.
+spec:
+  rules:
+    - name: add-runtime-default
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      mutate:
+        patchStrategicMerge:
+          spec:
+            securityContext:
+              +(seccompProfile):
+                type: RuntimeDefault

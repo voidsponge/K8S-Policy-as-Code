@@ -1,0 +1,37 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-readonly-root-filesystem
+  annotations:
+    policies.kyverno.io/title: Exiger un système de fichiers racine en lecture seule
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Un système de fichiers en lecture seule empêche un attaquant de déposer
+      un binaire ou de modifier la configuration de l'application. Les
+      répertoires inscriptibles passent par des volumes emptyDir explicites.
+spec:
+  background: true
+  rules:
+    - name: readonly-root-filesystem
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          securityContext.readOnlyRootFilesystem doit être à true sur chaque conteneur.
+        pattern:
+          spec:
+            =(initContainers):
+              - securityContext:
+                  readOnlyRootFilesystem: true
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true

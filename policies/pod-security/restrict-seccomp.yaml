@@ -1,0 +1,43 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-seccomp
+  annotations:
+    policies.kyverno.io/title: Interdire le profil seccomp Unconfined
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      seccomp filtre les appels système autorisés. Le profil Unconfined le
+      désactive complètement. Seuls RuntimeDefault et Localhost sont acceptés.
+      La policy add-default-seccomp-profile pose RuntimeDefault quand rien
+      n'est défini.
+spec:
+  background: true
+  rules:
+    - name: seccomp-profile
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          Le profil seccomp doit être RuntimeDefault ou Localhost (Unconfined interdit).
+        pattern:
+          spec:
+            =(securityContext):
+              =(seccompProfile):
+                =(type): "RuntimeDefault | Localhost"
+            =(initContainers):
+              - =(securityContext):
+                  =(seccompProfile):
+                    =(type): "RuntimeDefault | Localhost"
+            containers:
+              - =(securityContext):
+                  =(seccompProfile):
+                    =(type): "RuntimeDefault | Localhost"

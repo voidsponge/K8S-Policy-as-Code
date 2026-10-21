@@ -1,0 +1,54 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-non-root
+  annotations:
+    policies.kyverno.io/title: Exiger un utilisateur non root
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Un conteneur qui tourne en root facilite l'évasion vers l'hôte en cas de
+      faille du runtime. runAsNonRoot doit être à true, soit au niveau du Pod
+      (et non redéfini à false dans un conteneur), soit dans chaque conteneur.
+spec:
+  background: true
+  rules:
+    - name: run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          runAsNonRoot doit être à true, au niveau du Pod ou de chaque conteneur.
+        anyPattern:
+          # Option 1 : défini au niveau du Pod, pas écrasé par un conteneur
+          - spec:
+              securityContext:
+                runAsNonRoot: true
+              =(initContainers):
+                - =(securityContext):
+                    =(runAsNonRoot): true
+              =(ephemeralContainers):
+                - =(securityContext):
+                    =(runAsNonRoot): true
+              containers:
+                - =(securityContext):
+                    =(runAsNonRoot): true
+          # Option 2 : défini dans chaque conteneur
+          - spec:
+              =(initContainers):
+                - securityContext:
+                    runAsNonRoot: true
+              =(ephemeralContainers):
+                - securityContext:
+                    runAsNonRoot: true
+              containers:
+                - securityContext:
+                    runAsNonRoot: true

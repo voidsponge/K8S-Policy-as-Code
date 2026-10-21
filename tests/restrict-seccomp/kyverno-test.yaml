@@ -1,0 +1,29 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restrict-seccomp
+policies:
+- ../../policies/pod-security/restrict-seccomp.yaml
+resources:
+- resources.yaml
+results:
+- policy: restrict-seccomp
+  rule: seccomp-profile
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/unset
+  result: pass
+- policy: restrict-seccomp
+  rule: seccomp-profile
+  kind: Pod
+  resources:
+  - demo/unconfined
+  - demo/unconfined-container
+  result: fail
+- policy: restrict-seccomp
+  rule: seccomp-profile
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

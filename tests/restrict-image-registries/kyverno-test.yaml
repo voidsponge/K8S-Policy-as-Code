@@ -1,0 +1,29 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restrict-image-registries
+policies:
+- ../../policies/supply-chain/restrict-image-registries.yaml
+resources:
+- resources.yaml
+results:
+- policy: restrict-image-registries
+  rule: allowed-registries
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/chainguard
+  result: pass
+- policy: restrict-image-registries
+  rule: allowed-registries
+  kind: Pod
+  resources:
+  - demo/docker-hub
+  - demo/typosquat
+  result: fail
+- policy: restrict-image-registries
+  rule: allowed-registries
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

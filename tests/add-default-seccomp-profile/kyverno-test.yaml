@@ -1,0 +1,23 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: add-default-seccomp-profile
+policies:
+  - ../../policies/pod-security/add-default-seccomp-profile.yaml
+resources:
+  - resources.yaml
+results:
+  # Aucun profil : Kyverno ajoute RuntimeDefault
+  - policy: add-default-seccomp-profile
+    rule: add-runtime-default
+    kind: Pod
+    resources: [demo/no-seccomp]
+    patchedResources: patched.yaml
+    result: pass
+  # Un profil existe déjà : il n'est pas écrasé
+  - policy: add-default-seccomp-profile
+    rule: add-runtime-default
+    kind: Pod
+    resources: [demo/localhost-profile]
+    patchedResources: patched-unchanged.yaml
+    result: skip

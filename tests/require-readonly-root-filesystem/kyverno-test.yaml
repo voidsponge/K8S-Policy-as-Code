@@ -1,0 +1,28 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: require-readonly-root-filesystem
+policies:
+- ../../policies/pod-security/require-readonly-root-filesystem.yaml
+resources:
+- resources.yaml
+results:
+- policy: require-readonly-root-filesystem
+  rule: readonly-root-filesystem
+  kind: Pod
+  resources:
+  - demo/good
+  result: pass
+- policy: require-readonly-root-filesystem
+  rule: readonly-root-filesystem
+  kind: Pod
+  resources:
+  - demo/writable
+  - demo/unset
+  result: fail
+- policy: require-readonly-root-filesystem
+  rule: readonly-root-filesystem
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

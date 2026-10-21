@@ -1,0 +1,27 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: disallow-host-path
+policies:
+- ../../policies/pod-security/disallow-host-path.yaml
+resources:
+- resources.yaml
+results:
+- policy: disallow-host-path
+  rule: host-path
+  kind: Pod
+  resources:
+  - demo/good
+  result: pass
+- policy: disallow-host-path
+  rule: host-path
+  kind: Pod
+  resources:
+  - demo/host-path
+  result: fail
+- policy: disallow-host-path
+  rule: host-path
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

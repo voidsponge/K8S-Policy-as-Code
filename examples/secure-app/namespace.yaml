@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-app
+  labels:
+    # Défense en profondeur : Pod Security Admission natif en plus de Kyverno
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

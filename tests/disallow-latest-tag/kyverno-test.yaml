@@ -1,0 +1,49 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: disallow-latest-tag
+policies:
+- ../../policies/supply-chain/disallow-latest-tag.yaml
+resources:
+- resources.yaml
+results:
+- policy: disallow-latest-tag
+  rule: require-image-tag
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/digest
+  - demo/latest
+  result: pass
+- policy: disallow-latest-tag
+  rule: require-image-tag
+  kind: Pod
+  resources:
+  - demo/no-tag
+  result: fail
+- policy: disallow-latest-tag
+  rule: require-image-tag
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip
+- policy: disallow-latest-tag
+  rule: disallow-latest
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/digest
+  - demo/no-tag
+  result: pass
+- policy: disallow-latest-tag
+  rule: disallow-latest
+  kind: Pod
+  resources:
+  - demo/latest
+  result: fail
+- policy: disallow-latest-tag
+  rule: disallow-latest
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

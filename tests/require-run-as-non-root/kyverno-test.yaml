@@ -1,0 +1,29 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: require-run-as-non-root
+policies:
+- ../../policies/pod-security/require-run-as-non-root.yaml
+resources:
+- resources.yaml
+results:
+- policy: require-run-as-non-root
+  rule: run-as-non-root
+  kind: Pod
+  resources:
+  - demo/good
+  - demo/container-level
+  result: pass
+- policy: require-run-as-non-root
+  rule: run-as-non-root
+  kind: Pod
+  resources:
+  - demo/unset
+  - demo/overridden-in-container
+  result: fail
+- policy: require-run-as-non-root
+  rule: run-as-non-root
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

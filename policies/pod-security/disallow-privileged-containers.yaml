@@ -1,0 +1,41 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+  annotations:
+    policies.kyverno.io/title: Interdire les conteneurs privilégiés
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Un conteneur privilégié a accès à tous les périphériques de l'hôte et
+      désactive la plupart des mécanismes d'isolation. Une compromission du
+      conteneur devient une compromission du nœud.
+spec:
+  background: true
+  rules:
+    - name: privileged-false
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          Les conteneurs privilégiés sont interdits : securityContext.privileged
+          doit être absent ou à false.
+        pattern:
+          spec:
+            =(initContainers):
+              - =(securityContext):
+                  =(privileged): "false"
+            =(ephemeralContainers):
+              - =(securityContext):
+                  =(privileged): "false"
+            containers:
+              - =(securityContext):
+                  =(privileged): "false"

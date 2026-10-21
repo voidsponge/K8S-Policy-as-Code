@@ -1,0 +1,39 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Exiger des requests et des limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Sans limite mémoire, un seul Pod (bug, fuite, cryptominer) peut épuiser
+      la RAM d'un nœud et faire tomber ses voisins : c'est un déni de service.
+      Les requests permettent au scheduler de placer les Pods correctement.
+spec:
+  background: true
+  rules:
+    - name: requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          Chaque conteneur doit définir resources.requests.cpu,
+          resources.requests.memory et resources.limits.memory.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    memory: "?*"

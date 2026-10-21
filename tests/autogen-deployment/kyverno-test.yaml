@@ -1,0 +1,37 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: autogen-deployment
+policies:
+  - ../../policies/pod-security/disallow-privileged-containers.yaml
+  - ../../policies/pod-security/disallow-host-namespaces.yaml
+  - ../../policies/supply-chain/disallow-latest-tag.yaml
+  - ../../policies/supply-chain/restrict-image-registries.yaml
+resources:
+  - resources.yaml
+results:
+  - policy: disallow-privileged-containers
+    rule: autogen-privileged-false
+    kind: Deployment
+    resources: [demo/insecure-web]
+    result: fail
+  - policy: disallow-latest-tag
+    rule: autogen-disallow-latest
+    kind: Deployment
+    resources: [demo/insecure-web]
+    result: fail
+  - policy: restrict-image-registries
+    rule: autogen-allowed-registries
+    kind: Deployment
+    resources: [demo/insecure-web]
+    result: fail
+  - policy: disallow-host-namespaces
+    rule: autogen-cronjob-host-namespaces
+    kind: CronJob
+    resources: [demo/insecure-backup]
+    result: fail
+  - policy: restrict-image-registries
+    rule: autogen-cronjob-allowed-registries
+    kind: CronJob
+    resources: [demo/insecure-backup]
+    result: pass

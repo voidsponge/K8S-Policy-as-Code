@@ -1,0 +1,28 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: require-labels
+policies:
+- ../../policies/best-practices/require-labels.yaml
+resources:
+- resources.yaml
+results:
+- policy: require-labels
+  rule: standard-labels
+  kind: Pod
+  resources:
+  - demo/good
+  result: pass
+- policy: require-labels
+  rule: standard-labels
+  kind: Pod
+  resources:
+  - demo/no-labels
+  - demo/missing-part-of
+  result: fail
+- policy: require-labels
+  rule: standard-labels
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

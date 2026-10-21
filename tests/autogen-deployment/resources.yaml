@@ -1,0 +1,41 @@
+# Les policies ciblent les Pods, mais Kyverno génère automatiquement les règles
+# équivalentes pour Deployment, StatefulSet, DaemonSet, Job, CronJob...
+# Un Deployment non conforme est donc refusé dès sa création, pas seulement ses Pods.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insecure-web
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: web
+        app.kubernetes.io/part-of: demo
+    spec:
+      containers:
+        - name: web
+          image: nginx:latest
+          securityContext:
+            privileged: true
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: insecure-backup
+  namespace: demo
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          hostNetwork: true
+          containers:
+            - name: backup
+              image: registry.k8s.io/pause:3.10

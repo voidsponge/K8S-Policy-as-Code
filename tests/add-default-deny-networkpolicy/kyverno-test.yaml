@@ -1,0 +1,15 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: add-default-deny-networkpolicy
+policies:
+  - ../../policies/multi-tenancy/add-default-deny-networkpolicy.yaml
+resources:
+  - resources.yaml
+results:
+  - policy: add-default-deny-networkpolicy
+    rule: default-deny-ingress
+    kind: Namespace
+    resources: [team-a]
+    generatedResource: generated.yaml
+    result: pass

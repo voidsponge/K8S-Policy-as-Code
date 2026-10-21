@@ -1,0 +1,56 @@
+name: Policy tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Principe du moindre privilège : le token GITHUB_TOKEN est en lecture seule
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KYVERNO_VERSION: v1.18.1
+
+jobs:
+  lint:
+    name: Lint YAML
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: yamllint
+        run: |
+          pipx install yamllint==1.37.1
+          yamllint --strict .
+
+  unit:
+    name: Tests unitaires (Kyverno CLI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Installer la CLI Kyverno (somme de contrôle vérifiée)
+        run: |
+          base="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}"
+          archive="kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
+          curl -fsSLO "${base}/${archive}"
+          curl -fsSLO "${base}/checksums.txt"
+          grep " ${archive}\$" checksums.txt | sha256sum --check --strict
+          tar -xzf "${archive}" kyverno
+          sudo install -m 0755 kyverno /usr/local/bin/kyverno
+          kyverno version
+      - name: kyverno test
+        run: kyverno test tests/ --detailed-results
+      - name: L'exemple conforme passe toutes les policies
+        # kyverno apply sort en erreur dès qu'une règle échoue
+        run: kyverno apply policies/ --resource examples/secure-app/deployment.yaml --table

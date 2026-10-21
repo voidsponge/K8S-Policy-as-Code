@@ -1,0 +1,29 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: disallow-host-namespaces
+policies:
+- ../../policies/pod-security/disallow-host-namespaces.yaml
+resources:
+- resources.yaml
+results:
+- policy: disallow-host-namespaces
+  rule: host-namespaces
+  kind: Pod
+  resources:
+  - demo/good
+  result: pass
+- policy: disallow-host-namespaces
+  rule: host-namespaces
+  kind: Pod
+  resources:
+  - demo/host-network
+  - demo/host-pid
+  - demo/host-ipc
+  result: fail
+- policy: disallow-host-namespaces
+  rule: host-namespaces
+  kind: Pod
+  resources:
+  - kube-system/system-pod
+  result: skip

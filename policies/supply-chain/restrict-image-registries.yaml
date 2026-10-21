@@ -1,0 +1,39 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-image-registries
+  annotations:
+    policies.kyverno.io/title: Restreindre les registres d'images
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      N'importe qui peut publier une image sur Docker Hub, y compris du
+      typosquatting (ngnix au lieu de nginx). Seuls les registres de confiance
+      sont autorisés : registry.k8s.io, les images Chainguard et le registre
+      GHCR du projet.
+spec:
+  background: true
+  rules:
+    - name: allowed-registries
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, local-path-storage]
+      validate:
+        failureAction: Enforce
+        message: >-
+          Image refusée : seuls registry.k8s.io/*, cgr.dev/chainguard/* et
+          ghcr.io/voidsponge/* sont autorisés.
+        pattern:
+          spec:
+            =(initContainers):
+              - image: "registry.k8s.io/* | cgr.dev/chainguard/* | ghcr.io/voidsponge/*"
+            =(ephemeralContainers):
+              - image: "registry.k8s.io/* | cgr.dev/chainguard/* | ghcr.io/voidsponge/*"
+            containers:
+              - image: "registry.k8s.io/* | cgr.dev/chainguard/* | ghcr.io/voidsponge/*"
