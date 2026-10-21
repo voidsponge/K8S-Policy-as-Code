@@ -70,7 +70,8 @@ composants du cluster ont légitimement besoin de privilèges.
 | Unitaire | `kyverno test` | **72 cas** : pour chaque règle, des Pods qui doivent passer et d'autres qui doivent échouer, le résultat de la mutation, la ressource générée, l'autogen sur Deployment et CronJob, l'exclusion de `kube-system` | [`tests/`](tests/) |
 | End-to-end | kind + Helm + kubectl | Kyverno installé dans un **vrai cluster** : 12 manifests dangereux refusés par la bonne policy, mutation et génération observées, application de référence déployée jusqu'à `Ready` | [`e2e/`](e2e/), [`e2e.yml`](.github/workflows/e2e.yml) |
 
-Chaque manifest de [`e2e/denied/`](e2e/denied/) ne viole **qu'une seule** règle, et déclare
+Chaque manifest de [`e2e/denied/`](e2e/denied/) ne viole **qu'une seule** règle (sauf le conteneur
+privilégié, que Kubernetes oblige à autoriser aussi l'élévation de privilèges), et déclare
 laquelle doit le bloquer (`# expect: …`). Le test échoue si le manifest passe, mais aussi s'il est
 refusé par une autre policy que celle attendue : on vérifie que chaque règle fait son travail,
 pas seulement que « quelque chose » bloque.

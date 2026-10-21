@@ -1,5 +1,7 @@
 # Conteneur privilégié
 # expect: disallow-privileged-containers
+# Kubernetes refuse privileged: true avec allowPrivilegeEscalation: false,
+# ce manifest viole donc aussi disallow-privilege-escalation.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +32,7 @@ spec:
       - name: web
         image: registry.k8s.io/pause:3.10
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: true
           privileged: true
           readOnlyRootFilesystem: true
           capabilities:

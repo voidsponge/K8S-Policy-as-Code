@@ -41,11 +41,9 @@ jobs:
             --wait --timeout 5m
       - name: Tests e2e
         run: ./e2e/run.sh
-      - name: Rapports de policies (scan en arrière-plan)
+      - name: État des policies
         if: always()
-        run: |
-          kubectl get policyreports -A || true
-          kubectl get clusterpolicies
+        run: kubectl get clusterpolicies
       - name: Logs Kyverno en cas d'échec
         if: failure()
         run: kubectl logs -n kyverno -l app.kubernetes.io/component=admission-controller --tail=200

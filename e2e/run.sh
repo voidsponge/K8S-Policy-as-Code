@@ -33,6 +33,7 @@ for manifest in e2e/denied/*.yaml; do
     fail "$description : accepté alors qu'il devait être bloqué par $expected"
   elif grep -q "$expected" <<<"$output"; then
     pass "$description → bloqué par $expected"
+    grep -v '^\s*$' <<<"$output" | sed 's/^/      /'
   else
     fail "$description : refusé, mais pas par $expected"
     echo "$output" | sed 's/^/      /'
